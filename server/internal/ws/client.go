@@ -1,6 +1,10 @@
 package ws
 
-import "github.com/gorilla/websocket"
+import (
+	"log"
+
+	"github.com/gorilla/websocket"
+)
 
 type Client struct {
 	Conn     *websocket.Conn
@@ -38,10 +42,19 @@ func (c *Client) readMessage(hub *Hub) {
 		c.Conn.Close()
 	}()
 
-	// for {
-	// 	_, m, err := c.Conn.ReadMessage()
-	// 	if err != nil {
-	// 		if websocket.IsUnexpectedCloseError(err, webscoket.CloseGoingAway, websocket.CloseAbnormalClosure)
-	// 	}
-	// }
+	for {
+		_, m, err := c.Conn.ReadMessage()
+		if err != nil {
+			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
+				log.Printf("error: %v", err)
+			}
+		}
+
+		msg := &Message{
+			Content:  string(m),
+			RoomID:   c.RoomID,
+			Username: c.Username,
+		}
+		hub.Broadcast <- msg
+	}
 }
